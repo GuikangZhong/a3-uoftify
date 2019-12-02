@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/a3-uoftify.iml" filepath="$PROJECT_DIR$/a3-uoftify.iml" />
+      <module fileurl="file://$PROJECT_DIR$/profile-microservice/profile-microservice.iml" filepath="$PROJECT_DIR$/profile-microservice/profile-microservice.iml" />
+      <module fileurl="file://$PROJECT_DIR$/song-microservice/song-microservice.iml" filepath="$PROJECT_DIR$/song-microservice/song-microservice.iml" />
+    </modules>
+  </component>
+</project>
