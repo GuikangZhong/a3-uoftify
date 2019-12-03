@@ -74,15 +74,16 @@ public class SongController {
 		return null;
 	}
 
-	
+
 	@RequestMapping(value = "/addSong", method = RequestMethod.POST)
 	public @ResponseBody Map<String, Object> addSong(@RequestParam Map<String, String> params,
-			HttpServletRequest request) {
-
-		Map<String, Object> response = new HashMap<String, Object>();
+													 HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<>();
 		response.put("path", String.format("POST %s", Utils.getUrl(request)));
-
-		return null;
+		Song song = new Song(params.get(Song.KEY_SONG_NAME), params.get(Song.KEY_SONG_ARTIST_FULL_NAME), params.get(Song.KEY_SONG_ALBUM));
+		DbQueryStatus dbQueryStatus = songDal.addSong(song);
+		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 
 	
