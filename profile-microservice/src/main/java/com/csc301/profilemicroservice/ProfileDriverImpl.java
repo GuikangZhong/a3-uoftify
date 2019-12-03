@@ -13,6 +13,8 @@ import org.neo4j.driver.v1.StatementResult;
 import org.springframework.stereotype.Repository;
 import org.neo4j.driver.v1.Transaction;
 
+import static org.neo4j.driver.v1.Values.parameters;
+
 @Repository
 public class ProfileDriverImpl implements ProfileDriver {
 
@@ -40,8 +42,19 @@ public class ProfileDriverImpl implements ProfileDriver {
 	
 	@Override
 	public DbQueryStatus createUserProfile(String userName, String fullName, String password) {
-		
-		return null;
+
+		try (Session session = driver.session()) {
+			try (Transaction trans = session.beginTransaction()) {
+				trans.run("CREATE (p:profile) SET p.userName = $userName, p.name = $fullName, p.password = $password",
+						parameters( "userName", userName, "fullName", fullName, "password", password) );
+				trans.success();
+			}
+			session.close();
+			return new DbQueryStatus("Success", DbQueryExecResult.QUERY_OK);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new DbQueryStatus("Failure", DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
 	}
 
 	@Override
