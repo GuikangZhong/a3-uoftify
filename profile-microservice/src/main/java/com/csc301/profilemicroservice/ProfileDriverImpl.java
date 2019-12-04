@@ -46,8 +46,10 @@ public class ProfileDriverImpl implements ProfileDriver {
 		try (Session session = driver.session()) {
 
 			try (Transaction trans = session.beginTransaction()) {
-				trans.run("CREATE (p:profile) SET p.userName = $userName, p.name = $fullName, p.password = $password",
-						parameters( "userName", userName, "fullName", fullName, "password", password) );
+				trans.run("CREATE (:profile {userName: $userName, name: $fullName, " +
+								"password: $password}) -[:created]-> (:playlist {plName: $plName})",
+						parameters( "userName", userName, "fullName", fullName,
+								"password", password, "plName", (userName+"-favorites")));
 				trans.success();
 			}
 			session.close();
