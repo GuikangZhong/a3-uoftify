@@ -61,6 +61,7 @@ public class ProfileController {
 		// construct and return response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("POST %s", Utils.getUrl(request)));
+		response.put("message", dbQueryStatus.getMessage());
 		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
 		return response;
 	}
@@ -69,10 +70,15 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> followFriend(@PathVariable("userName") String userName,
 			@PathVariable("friendUserName") String friendUserName, HttpServletRequest request) {
 
+		// run query
+		ProfileDriver driver = new ProfileDriverImpl();
+		DbQueryStatus dbQueryStatus = driver.followFriend(userName, friendUserName);
+
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-		
-		return null;
+		response.put("message", dbQueryStatus.getMessage());
+		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
+		return response;
 	}
 
 	@RequestMapping(value = "/getAllFriendFavouriteSongTitles/{userName}", method = RequestMethod.GET)
