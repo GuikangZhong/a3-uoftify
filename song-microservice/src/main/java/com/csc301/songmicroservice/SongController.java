@@ -56,11 +56,14 @@ public class SongController {
 	@RequestMapping(value = "/getSongTitleById/{songId}", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Object> getSongTitleById(@PathVariable("songId") String songId,
 			HttpServletRequest request) {
-
+		// Create an empty response
 		Map<String, Object> response = new HashMap<String, Object>();
+		// put the Http path to response
 		response.put("path", String.format("GET %s", Utils.getUrl(request)));
-
-		return null;
+		// get the actual response from the database
+		DbQueryStatus dbQueryStatus = songDal.getSongTitleById(songId);
+		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 
 	
@@ -70,19 +73,24 @@ public class SongController {
 
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("DELETE %s", Utils.getUrl(request)));
-
-		return null;
+		// acquire the database query status from songDal
+		DbQueryStatus dbQueryStatus = songDal.deleteSongById(songId);
+		//fill out the response body
+		response.put("message", dbQueryStatus.getMessage());
+		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 
-	
+
 	@RequestMapping(value = "/addSong", method = RequestMethod.POST)
 	public @ResponseBody Map<String, Object> addSong(@RequestParam Map<String, String> params,
-			HttpServletRequest request) {
-
-		Map<String, Object> response = new HashMap<String, Object>();
+													 HttpServletRequest request) {
+		Map<String, Object> response = new HashMap<>();
 		response.put("path", String.format("POST %s", Utils.getUrl(request)));
-
-		return null;
+		Song song = new Song(params.get(Song.KEY_SONG_NAME), params.get(Song.KEY_SONG_ARTIST_FULL_NAME), params.get(Song.KEY_SONG_ALBUM));
+		DbQueryStatus dbQueryStatus = songDal.addSong(song);
+		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 
 	
@@ -92,7 +100,15 @@ public class SongController {
 
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("data", String.format("PUT %s", Utils.getUrl(request)));
-
-		return null;
+		//interpret the boolean value of "shouldDecrement"
+		boolean shouldDec = false;
+		if (shouldDecrement.equals("true")) {
+			shouldDec = true;
+		}
+		DbQueryStatus dbQueryStatus = songDal.updateSongFavouritesCount(songId, shouldDec);
+		//Fill out the response body
+		response.put("message", dbQueryStatus.getMessage());
+		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 }
