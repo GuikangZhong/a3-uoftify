@@ -31,15 +31,20 @@ public class PlaylistDriverImpl implements PlaylistDriver {
 
 		try (Session session = driver.session()) {
 
+			StatementResult statementResult;
+
 			try (Transaction trans = session.beginTransaction()) {
-				trans.run("match (pl:playlist {plName: $plName}) " +
-								"merge (s:song {songId: $songId}) merge (pl) -[:includes]-> (s)",
+				statementResult = trans.run("match (pl:playlist {plName: $plName}) " +
+								"merge (s:song {songId: $songId}) merge (pl) -[:includes]-> (s) return pl",
 						parameters( "plName", (userName+"-favorites"), "songId", songId));
 				trans.success();
 			}
 			session.close();
 
-			return new DbQueryStatus("Successfully liked song.", DbQueryExecResult.QUERY_OK);
+			if (statementResult.hasNext())
+				return new DbQueryStatus("Successfully liked song.", DbQueryExecResult.QUERY_OK);
+			else
+				return new DbQueryStatus("User not Found.", DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new DbQueryStatus("Failure!", DbQueryExecResult.QUERY_ERROR_GENERIC);
