@@ -31,14 +31,49 @@ public class SongDalImpl implements SongDal {
 
 	@Override
 	public DbQueryStatus findSongById(String songId) {
-		// TODO Auto-generated method stub
-		return null;
+		// Initialize the query
+		DbQueryStatus dbQueryStatus;
+		Query query = new Query();
+		query.addCriteria(Criteria.where("_id").is(songId));
+		try {
+			//find the song
+			Song song = db.findOne(query, Song.class);
+			// create an appropriate query status
+			dbQueryStatus = new DbQueryStatus("Found the Song", DbQueryExecResult.QUERY_OK);
+			dbQueryStatus.setData(song);
+			return dbQueryStatus;
+		} catch (NullPointerException e) {
+			// if the result not found
+			dbQueryStatus = new DbQueryStatus("Song not found", DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
+		} catch (Exception e) {
+			// if the server has error
+			dbQueryStatus = new DbQueryStatus("Server error", DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
+		return dbQueryStatus;
 	}
 
 	@Override
 	public DbQueryStatus getSongTitleById(String songId) {
-		// TODO Auto-generated method stub
-		return null;
+		// Initialize the query
+		DbQueryStatus dbQueryStatus;
+		Query query = new Query();
+		query.addCriteria(Criteria.where("_id").is(songId));
+		try {
+			//find the song
+			Song song = db.findOne(query, Song.class);
+			// create an appropriate query status
+			dbQueryStatus = new DbQueryStatus("Found the name of the song", DbQueryExecResult.QUERY_OK);
+			//Extract the name of the song
+			dbQueryStatus.setData(song.getSongName());
+			return dbQueryStatus;
+		} catch (NullPointerException e) {
+			// if the result not found
+			dbQueryStatus = new DbQueryStatus("Song not found", DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
+		} catch (Exception e) {
+			// if the server has error
+			dbQueryStatus = new DbQueryStatus("Server error", DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
+		return dbQueryStatus;
 	}
 
 	@Override
