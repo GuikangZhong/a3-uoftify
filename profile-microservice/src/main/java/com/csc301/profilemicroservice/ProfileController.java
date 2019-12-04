@@ -58,7 +58,7 @@ public class ProfileController {
 		ProfileDriver driver = new ProfileDriverImpl();
 		DbQueryStatus dbQueryStatus = driver.createUserProfile(userName, fullName, password);
 
-		// construct and return response
+		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("POST %s", Utils.getUrl(request)));
 		response.put("message", dbQueryStatus.getMessage());
@@ -74,6 +74,7 @@ public class ProfileController {
 		ProfileDriver driver = new ProfileDriverImpl();
 		DbQueryStatus dbQueryStatus = driver.followFriend(userName, friendUserName);
 
+		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
 		response.put("message", dbQueryStatus.getMessage());
@@ -95,11 +96,16 @@ public class ProfileController {
 	@RequestMapping(value = "/unfollowFriend/{userName}/{friendUserName}", method = RequestMethod.PUT)
 	public @ResponseBody Map<String, Object> unfollowFriend(@PathVariable("userName") String userName,
 			@PathVariable("friendUserName") String friendUserName, HttpServletRequest request) {
+		// run query
+		ProfileDriver driver = new ProfileDriverImpl();
+		DbQueryStatus dbQueryStatus = driver.unfollowFriend(userName, friendUserName);
 
+		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-
-		return null;
+		response.put("message", dbQueryStatus.getMessage());
+		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
+		return response;
 	}
 
 	@RequestMapping(value = "/likeSong/{userName}/{songId}", method = RequestMethod.PUT)
