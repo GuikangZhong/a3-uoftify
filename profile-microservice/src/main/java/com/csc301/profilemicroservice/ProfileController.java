@@ -144,9 +144,15 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> deleteAllSongsFromDb(@PathVariable("songId") String songId,
 			HttpServletRequest request) {
 
+		// run query
+		PlaylistDriver driver = new PlaylistDriverImpl();
+		DbQueryStatus dbQueryStatus = driver.deleteSongFromDb(songId);
+
+		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-		
-		return null;
+		response.put("message", dbQueryStatus.getMessage());
+		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
+		return response;
 	}
 }

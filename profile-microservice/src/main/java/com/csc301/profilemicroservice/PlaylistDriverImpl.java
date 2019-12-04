@@ -90,7 +90,20 @@ public class PlaylistDriverImpl implements PlaylistDriver {
 
 	@Override
 	public DbQueryStatus deleteSongFromDb(String songId) {
-		
-		return null;
+
+		try (Session session = driver.session()) {
+
+			try (Transaction trans = session.beginTransaction()) {
+				 trans.run("match (s:song {songId: $songId}) detach delete s",
+						parameters( "songId", songId));
+				trans.success();
+			}
+			session.close();
+
+			return new DbQueryStatus("The song is deleted.", DbQueryExecResult.QUERY_OK);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new DbQueryStatus("Internal Error", DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
 	}
 }
