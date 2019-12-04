@@ -57,7 +57,7 @@ public class ProfileDriverImpl implements ProfileDriver {
 			return new DbQueryStatus("Successfully created profile.", DbQueryExecResult.QUERY_OK);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new DbQueryStatus("The user name already exist!", DbQueryExecResult.QUERY_ERROR_GENERIC);
+			return new DbQueryStatus("UserName already exist!", DbQueryExecResult.QUERY_ERROR_GENERIC);
 		}
 	}
 
