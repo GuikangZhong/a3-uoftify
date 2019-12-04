@@ -54,8 +54,38 @@ public class PlaylistDriverImpl implements PlaylistDriver {
 
 	@Override
 	public DbQueryStatus unlikeSong(String userName, String songId) {
-		
-		return null;
+
+		try (Session session = driver.session()) {
+			StatementResult statementResult = null;
+			DbQueryStatus dbQueryStatus;
+			String message;
+
+			// check whether or not the user have the song in his favorites list
+			try (Transaction trans = session.beginTransaction()) {
+				statementResult = trans.run("match (pl:playlist {plName: $plName}) -[r:includes]-> " +
+								"(s:song {songId: $songId}) return r",
+						parameters( "plName", (userName+"-favorites"), "songId", songId));
+
+				// if they are friends
+				if (statementResult.hasNext()) {
+					trans.run("match (pl:playlist {plName: $plName}) -[r:includes]-> " +
+									"(s:song {songId: $songId}) delete r",
+							parameters( "plName", (userName+"-favorites"), "songId", songId));
+					trans.success();
+					message = "User successfully unliked the song.";
+					dbQueryStatus =  new DbQueryStatus(message, DbQueryExecResult.QUERY_OK);
+				} else {	// otherwise
+					message = "User is not exist or the song is not in his favorites list.";
+					dbQueryStatus =  new DbQueryStatus(message, DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
+				}
+			}
+
+			session.close();
+			return dbQueryStatus;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new DbQueryStatus("Internal Error", DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
 	}
 
 	@Override
