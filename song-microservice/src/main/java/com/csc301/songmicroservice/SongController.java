@@ -56,9 +56,11 @@ public class SongController {
 	@RequestMapping(value = "/getSongTitleById/{songId}", method = RequestMethod.GET)
 	public @ResponseBody Map<String, Object> getSongTitleById(@PathVariable("songId") String songId,
 			HttpServletRequest request) {
-
+		// Create an empty response
 		Map<String, Object> response = new HashMap<String, Object>();
+		// put the Http path to response
 		response.put("path", String.format("GET %s", Utils.getUrl(request)));
+		// get the actual response from the database
 		DbQueryStatus dbQueryStatus = songDal.getSongTitleById(songId);
 		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
 		return response;
