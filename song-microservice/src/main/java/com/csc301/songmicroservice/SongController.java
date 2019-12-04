@@ -70,8 +70,12 @@ public class SongController {
 
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("DELETE %s", Utils.getUrl(request)));
-
-		return null;
+		// acquire the database query status from songDal
+		DbQueryStatus dbQueryStatus = songDal.deleteSongById(songId);
+		//fill out the response body
+		response.put("message", dbQueryStatus.getMessage());
+		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 
 	
