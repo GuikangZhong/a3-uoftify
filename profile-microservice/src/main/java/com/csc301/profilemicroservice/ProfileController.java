@@ -19,10 +19,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -86,10 +83,17 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> getAllFriendFavouriteSongTitles(@PathVariable("userName") String userName,
 			HttpServletRequest request) {
 
+		// run query
+		ProfileDriver driver = new ProfileDriverImpl();
+		DbQueryStatus dbQueryStatus = driver.getAllSongFriendsLike(userName);
+
+
+		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-
-		return null;
+		response.put("message", dbQueryStatus.getMessage());
+		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
+		return response;
 	}
 
 
@@ -144,9 +148,15 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> deleteAllSongsFromDb(@PathVariable("songId") String songId,
 			HttpServletRequest request) {
 
+		// run query
+		PlaylistDriver driver = new PlaylistDriverImpl();
+		DbQueryStatus dbQueryStatus = driver.deleteSongFromDb(songId);
+
+		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-		
-		return null;
+		response.put("message", dbQueryStatus.getMessage());
+		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
+		return response;
 	}
 }
