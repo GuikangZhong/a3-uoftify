@@ -157,16 +157,33 @@ public class ProfileController {
 	@RequestMapping(value = "/unlikeSong/{userName}/{songId}", method = RequestMethod.PUT)
 	public @ResponseBody Map<String, Object> unlikeSong(@PathVariable("userName") String userName,
 			@PathVariable("songId") String songId, HttpServletRequest request) {
-
-		// run query
-		DbQueryStatus dbQueryStatus = playlistDriver.unlikeSong(userName, songId);
-
-		// construct and send response
+		// initialize response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-		response.put("message", dbQueryStatus.getMessage());
-		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
-		return response;
+
+		try {
+			// check whether or not the user successfully remove the song from his favorites list
+			DbQueryStatus dbQueryStatus = playlistDriver.unlikeSong(userName, songId);
+
+			// if so, decrement the favorites count
+			if (dbQueryStatus.getdbQueryExecResult().equals(DbQueryExecResult.QUERY_OK)) {
+				Request mongoRequest = new Request.Builder()
+						.url("http://localhost:3001/updateSongFavouritesCount/"+songId+"?shouldDecrement=true")
+						.put(Utils.emptyRequestBody)
+						.build();
+				client.newCall(mongoRequest).execute();
+			}
+
+			response.put("message", dbQueryStatus.getMessage());
+			Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
+			return response;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("message", "Internal Error");
+			Utils.setResponseStatus(response, DbQueryExecResult.QUERY_ERROR_GENERIC, null);
+			return response;
+		}
 	}
 
 	@RequestMapping(value = "/deleteAllSongsFromDb/{songId}", method = RequestMethod.PUT)
