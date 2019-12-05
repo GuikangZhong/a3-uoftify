@@ -137,7 +137,46 @@ public class ProfileDriverImpl implements ProfileDriver {
 
 	@Override
 	public DbQueryStatus getAllSongFriendsLike(String userName) {
-			
-		return null;
+
+		try (Session session = driver.session()) {
+			StatementResult frndPlResult;
+			StatementResult frndSongResult;
+			DbQueryStatus dbQueryStatus;
+			String message;
+			String frndPl;
+			Map<String, List<String>> data = new HashMap<>();
+
+			try (Transaction trans = session.beginTransaction()) {
+				// get all friends of User
+				frndPlResult = trans.run("match (:profile{userName: $userName})-[:follows]->(f)" +
+								"match (f) -[:created]-> (pl) return pl.plName",
+						parameters( "userName", userName));
+
+				// for each friend get all his songs
+				while (frndPlResult.hasNext()) {
+					frndPl = frndPlResult.next().get(0).toString().replaceAll("\"", "");
+					frndSongResult = trans.run("match (:playlist{plName: $plName})" +
+									"-[:includes]->(s) return s.songId",
+							parameters("plName", frndPl));
+
+					List<String> songs = new ArrayList<String>();
+					while (frndSongResult.hasNext()){
+						songs.add(frndSongResult.next().get(0).asString().replaceAll("\"", ""));
+					}
+					data.put(frndPl.substring(0, frndPl.indexOf("-favorites")), songs);
+				}
+				trans.success();
+			}
+			session.close();
+			message = "Successfully got all songs the user's friends like.";
+			dbQueryStatus = new DbQueryStatus(message, DbQueryExecResult.QUERY_OK);
+			dbQueryStatus.setData(data);
+			return dbQueryStatus;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new DbQueryStatus("Internal Error", DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
 	}
+
 }
