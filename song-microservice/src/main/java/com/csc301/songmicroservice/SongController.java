@@ -75,6 +75,20 @@ public class SongController {
 		response.put("path", String.format("DELETE %s", Utils.getUrl(request)));
 		// acquire the database query status from songDal
 		DbQueryStatus dbQueryStatus = songDal.deleteSongById(songId);
+		// if the song is indeed deleted
+		if (dbQueryStatus.getdbQueryExecResult() == DbQueryExecResult.QUERY_OK) {
+			// remove the song in the profile-microservice as well
+			Request deleteSongRequest = new Request.Builder()
+					.url("Http://localhost:3002/deleteAllSongsFromDb/" + songId)
+					.put(Utils.emptyRequestBody)
+					.build();
+			try {
+				// send the request to profile-microservice
+				client.newCall(deleteSongRequest).execute();
+			} catch (IOException e) {
+				System.out.println("Wrong URL");
+			}
+		}
 		//fill out the response body
 		response.put("message", dbQueryStatus.getMessage());
 		response = Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), dbQueryStatus.getData());
