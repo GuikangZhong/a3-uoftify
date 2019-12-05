@@ -1,5 +1,9 @@
 package com.csc301.profilemicroservice;
 
+import okhttp3.*;
+import okio.BufferedSink;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,12 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.csc301.profilemicroservice.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 import java.io.IOException;
 import java.util.*;
@@ -110,10 +108,32 @@ public class ProfileController {
 
 	@RequestMapping(value = "/likeSong/{userName}/{songId}", method = RequestMethod.PUT)
 	public @ResponseBody Map<String, Object> likeSong(@PathVariable("userName") String userName,
-			@PathVariable("songId") String songId, HttpServletRequest request) {
+			@PathVariable("songId") String songId, HttpServletRequest request) throws IOException {
+
+		//verify the song id
+		HttpUrl.Builder urlBuilder = HttpUrl.parse("http://localhost:3001/updateSongFavouritesCount/" + songId +
+				"?shouldDecrement=false").newBuilder();
+		String url = urlBuilder.build().toString();
+
+		Request mongoRequest = new Request.Builder().url(url).put(new RequestBody() {
+			@Nullable
+			@Override
+			public MediaType contentType() {
+				return null;
+			}
+
+			@Override
+			public void writeTo(@NotNull BufferedSink bufferedSink) throws IOException {
+
+			}
+		}).build();
+
+		Response response1 = client.newCall(mongoRequest).execute();
+		System.out.println(response1);
 
 		// run query
 		DbQueryStatus dbQueryStatus = playlistDriver.likeSong(userName, songId);
+
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
