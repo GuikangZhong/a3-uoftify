@@ -47,13 +47,12 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> addSong(@RequestParam Map<String, String> params,
 			HttpServletRequest request) {
 		// get request body
-		String userName = params.get("userName");
-		String fullName = params.get("fullName");
-		String password = params.get("password");
+		String userName = params.get(KEY_USER_NAME);
+		String fullName = params.get(KEY_USER_FULLNAME);
+		String password = params.get(KEY_USER_PASSWORD);
 
 		// run query
-		ProfileDriver driver = new ProfileDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.createUserProfile(userName, fullName, password);
+		DbQueryStatus dbQueryStatus = profileDriver.createUserProfile(userName, fullName, password);
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -68,8 +67,7 @@ public class ProfileController {
 			@PathVariable("friendUserName") String friendUserName, HttpServletRequest request) {
 
 		// run query
-		ProfileDriver driver = new ProfileDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.followFriend(userName, friendUserName);
+		DbQueryStatus dbQueryStatus = profileDriver.followFriend(userName, friendUserName);
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -84,8 +82,7 @@ public class ProfileController {
 			HttpServletRequest request) {
 
 		// run query
-		ProfileDriver driver = new ProfileDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.getAllSongFriendsLike(userName);
+		DbQueryStatus dbQueryStatus = profileDriver.getAllSongFriendsLike(userName);
 
 
 		// construct and send response
@@ -101,8 +98,7 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> unfollowFriend(@PathVariable("userName") String userName,
 			@PathVariable("friendUserName") String friendUserName, HttpServletRequest request) {
 		// run query
-		ProfileDriver driver = new ProfileDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.unfollowFriend(userName, friendUserName);
+		DbQueryStatus dbQueryStatus = profileDriver.unfollowFriend(userName, friendUserName);
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -117,8 +113,7 @@ public class ProfileController {
 			@PathVariable("songId") String songId, HttpServletRequest request) {
 
 		// run query
-		PlaylistDriver driver = new PlaylistDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.likeSong(userName, songId);
+		DbQueryStatus dbQueryStatus = playlistDriver.likeSong(userName, songId);
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -133,8 +128,7 @@ public class ProfileController {
 			@PathVariable("songId") String songId, HttpServletRequest request) {
 
 		// run query
-		PlaylistDriver driver = new PlaylistDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.unlikeSong(userName, songId);
+		DbQueryStatus dbQueryStatus = playlistDriver.unlikeSong(userName, songId);
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
@@ -149,8 +143,7 @@ public class ProfileController {
 			HttpServletRequest request) {
 
 		// run query
-		PlaylistDriver driver = new PlaylistDriverImpl();
-		DbQueryStatus dbQueryStatus = driver.deleteSongFromDb(songId);
+		DbQueryStatus dbQueryStatus = playlistDriver.deleteSongFromDb(songId);
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
