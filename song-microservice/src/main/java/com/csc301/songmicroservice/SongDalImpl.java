@@ -23,9 +23,14 @@ public class SongDalImpl implements SongDal {
 
 	@Override
 	public DbQueryStatus addSong(Song songToAdd) {
-		Song song = db.insert(songToAdd);
-		DbQueryStatus dbQueryStatus = new DbQueryStatus(null, DbQueryExecResult.QUERY_OK);
-		dbQueryStatus.setData(song);
+		DbQueryStatus dbQueryStatus;
+		try {
+			Song song = db.insert(songToAdd);
+			dbQueryStatus = new DbQueryStatus(null, DbQueryExecResult.QUERY_OK);
+			dbQueryStatus.setData(song);
+		} catch (Exception e) {
+			dbQueryStatus = new DbQueryStatus(null, DbQueryExecResult.QUERY_ERROR_GENERIC);
+		}
 		return dbQueryStatus;
 	}
 
@@ -38,10 +43,12 @@ public class SongDalImpl implements SongDal {
 		try {
 			//find the song
 			Song song = db.findOne(query, Song.class);
+			if (song == null) {
+				throw new NullPointerException();
+			}
 			// create an appropriate query status
 			dbQueryStatus = new DbQueryStatus("Found the Song", DbQueryExecResult.QUERY_OK);
 			dbQueryStatus.setData(song);
-			return dbQueryStatus;
 		} catch (NullPointerException e) {
 			// if the result not found
 			dbQueryStatus = new DbQueryStatus("Song not found", DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
