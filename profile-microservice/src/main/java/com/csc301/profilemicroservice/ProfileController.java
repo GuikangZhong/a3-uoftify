@@ -108,41 +108,48 @@ public class ProfileController {
 
 	@RequestMapping(value = "/likeSong/{userName}/{songId}", method = RequestMethod.PUT)
 	public @ResponseBody Map<String, Object> likeSong(@PathVariable("userName") String userName,
-			@PathVariable("songId") String songId, HttpServletRequest request) throws IOException {
-
+			@PathVariable("songId") String songId, HttpServletRequest request) {
 		// initialize response
 		Map<String, Object> response = new HashMap<String, Object>();
 		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
-
-		// check the existence of the song in MongoDB
-		Request getSongByIdRequest = new Request.Builder()
-				.url("http://localhost:3001/getSongById/"+songId)
-				.get()
-				.build();
-		String getSongByIdResponse = client.newCall(getSongByIdRequest).execute().body().string();
-
-		if (!getSongByIdResponse.contains("\"status\":\"OK\"")) {
-			response.put("message", "The song is not found!");
-			Utils.setResponseStatus(response, DbQueryExecResult.QUERY_ERROR_NOT_FOUND, null);
+		
+		try {
+			
+			// check the existence of the song in MongoDB
+			Request getSongByIdRequest = new Request.Builder()
+					.url("http://localhost:3001/getSongById/"+songId)
+					.get()
+					.build();
+		
+			String getSongByIdResponse = client.newCall(getSongByIdRequest).execute().body().string();
+			if (!getSongByIdResponse.contains("\"status\":\"OK\"")) {
+				response.put("message", "The song is not found!");
+				Utils.setResponseStatus(response, DbQueryExecResult.QUERY_ERROR_NOT_FOUND, null);
+				return response;
+			}
+			// check whether or not the song is already liked by the user in Neo4j
+			DbQueryStatus dbQueryStatus = playlistDriver.likeSong(userName, songId);
+	
+	
+			// increment the Favourites in MongoDB
+			Request mongoRequest = new Request.Builder()
+					.url("http://localhost:3001/updateSongFavouritesCount/"+songId+"?shouldDecrement=false")
+					.put(Utils.emptyRequestBody)
+					.build();
+			client.newCall(mongoRequest).execute();
+	
+	
+			// send response
+			response.put("message", dbQueryStatus.getMessage());
+			Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
+			return response;
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+			response.put("message", "Internal Error");
+			Utils.setResponseStatus(response, DbQueryExecResult.QUERY_ERROR_GENERIC, null);
 			return response;
 		}
-
-		// check whether or not the song is already liked by the user in Neo4j
-		DbQueryStatus dbQueryStatus = playlistDriver.likeSong(userName, songId);
-
-
-		// increment the Favourites in MongoDB
-		Request mongoRequest = new Request.Builder()
-				.url("http://localhost:3001/updateSongFavouritesCount/"+songId+"?shouldDecrement=false")
-				.put(Utils.emptyRequestBody)
-				.build();
-		client.newCall(mongoRequest).execute();
-
-
-		// send response
-		response.put("message", dbQueryStatus.getMessage());
-		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
-		return response;
 	}
 
 	@RequestMapping(value = "/unlikeSong/{userName}/{songId}", method = RequestMethod.PUT)
