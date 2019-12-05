@@ -83,7 +83,31 @@ public class ProfileController {
 
 		// run query
 		DbQueryStatus dbQueryStatus = profileDriver.getAllSongFriendsLike(userName);
+		Map<String, List<String>> data = (Map<String, List<String>>) dbQueryStatus.getData();
 
+		// for each friend, replace his songid list with title list
+		for (Map.Entry<String, List<String>> entry : data.entrySet()) {
+			List<String> songIds = entry.getValue();
+			List<String> songTitles = new ArrayList<String>();
+
+			// replace each songId with the corresponding song title
+			for (String songId: songIds) {
+				try {
+					Request getSongByIdRequest = new Request.Builder()
+							.url("http://localhost:3001/getSongTitleById/"+songId)
+							.get()
+							.build();
+
+					String getSongByIdResponse = client.newCall(getSongByIdRequest).execute().body().string();
+					int from = getSongByIdResponse.indexOf("\"data\":\"") + ("\"data\":\"").length();
+					String title = getSongByIdResponse.substring(from, getSongByIdResponse.indexOf('"', from));
+					songTitles.add(title);
+				} catch (Exception e) {
+					songTitles.add("A song is not found.");
+				}
+			}
+			entry.setValue(songTitles);
+		}
 
 		// construct and send response
 		Map<String, Object> response = new HashMap<String, Object>();
