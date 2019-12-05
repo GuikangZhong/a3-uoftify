@@ -32,24 +32,37 @@ public class PlaylistDriverImpl implements PlaylistDriver {
 		try (Session session = driver.session()) {
 
 			StatementResult statementResult;
+			DbQueryStatus dbQueryStatus;
+			Boolean notAlreadyLiked;
 
 			try (Transaction trans = session.beginTransaction()) {
+				// check whether the user already liked the song before
 				statementResult = trans.run("match (pl:playlist {plName: $plName}) " +
-								"merge (s:song {songId: $songId}) merge (pl) -[:includes]-> (s) return pl",
+								"-[r:includes]-> (s:song {songId: $songId}) return r",
 						parameters( "plName", (userName+"-favorites"), "songId", songId));
+				notAlreadyLiked = !statementResult.hasNext();
+
+				// add the song into the user's favorites if not already
+				if (notAlreadyLiked) {
+					statementResult = trans.run("match (pl:playlist {plName: $plName}) " +
+									"merge (s:song {songId: $songId}) merge (pl) -[:includes]-> (s) return pl",
+							parameters("plName", (userName + "-favorites"), "songId", songId));
+				}
 				trans.success();
 			}
 			session.close();
 
-			if (statementResult.hasNext())
-				return new DbQueryStatus("Successfully liked song.", DbQueryExecResult.QUERY_OK);
-			else
-				return new DbQueryStatus("User not Found.", DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
+			if (statementResult.hasNext()) {
+				dbQueryStatus = new DbQueryStatus("Successfully liked song.", DbQueryExecResult.QUERY_OK);
+				dbQueryStatus.setData(notAlreadyLiked);
+			} else {
+				dbQueryStatus = new DbQueryStatus("User not Found.", DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
+			}
+			return dbQueryStatus;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return new DbQueryStatus("Failure!", DbQueryExecResult.QUERY_ERROR_GENERIC);
+			return new DbQueryStatus("Internal Error", DbQueryExecResult.QUERY_ERROR_GENERIC);
 		}
-
 	}
 
 	@Override
