@@ -88,7 +88,7 @@ public class PlaylistDriverImpl implements PlaylistDriver {
 					message = "User successfully unliked the song.";
 					dbQueryStatus =  new DbQueryStatus(message, DbQueryExecResult.QUERY_OK);
 				} else {	// otherwise
-					message = "User is not exist or the song is not in his favorites list.";
+					message = "User or song not found, or the song is not in his favorites list.";
 					dbQueryStatus =  new DbQueryStatus(message, DbQueryExecResult.QUERY_ERROR_NOT_FOUND);
 				}
 			}
