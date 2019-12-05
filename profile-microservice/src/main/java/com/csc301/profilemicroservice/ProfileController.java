@@ -110,34 +110,36 @@ public class ProfileController {
 	public @ResponseBody Map<String, Object> likeSong(@PathVariable("userName") String userName,
 			@PathVariable("songId") String songId, HttpServletRequest request) throws IOException {
 
-		//verify the song id
-		HttpUrl.Builder urlBuilder = HttpUrl.parse("http://localhost:3001/updateSongFavouritesCount/" + songId +
-				"?shouldDecrement=false").newBuilder();
-		String url = urlBuilder.build().toString();
+		// initialize response
+		Map<String, Object> response = new HashMap<String, Object>();
+		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
 
-		Request mongoRequest = new Request.Builder().url(url).put(new RequestBody() {
-			@Nullable
-			@Override
-			public MediaType contentType() {
-				return null;
-			}
+		// check the existence of the song in MongoDB
+		Request getSongByIdRequest = new Request.Builder()
+				.url("http://localhost:3001/getSongById/"+songId)
+				.get()
+				.build();
+		String getSongByIdResponse = client.newCall(getSongByIdRequest).execute().body().string();
 
-			@Override
-			public void writeTo(@NotNull BufferedSink bufferedSink) throws IOException {
+		if (!getSongByIdResponse.contains("\"status\":\"OK\"")) {
+			response.put("message", "The song is not found!");
+			Utils.setResponseStatus(response, DbQueryExecResult.QUERY_ERROR_NOT_FOUND, null);
+			return response;
+		}
 
-			}
-		}).build();
-
-		Response response1 = client.newCall(mongoRequest).execute();
-		System.out.println(response1);
-
-		// run query
+		// check whether or not the song is already liked by the user in Neo4j
 		DbQueryStatus dbQueryStatus = playlistDriver.likeSong(userName, songId);
 
 
-		// construct and send response
-		Map<String, Object> response = new HashMap<String, Object>();
-		response.put("path", String.format("PUT %s", Utils.getUrl(request)));
+		// increment the Favourites in MongoDB
+		Request mongoRequest = new Request.Builder()
+				.url("http://localhost:3001/updateSongFavouritesCount/"+songId+"?shouldDecrement=false")
+				.put(Utils.emptyRequestBody)
+				.build();
+		client.newCall(mongoRequest).execute();
+
+
+		// send response
 		response.put("message", dbQueryStatus.getMessage());
 		Utils.setResponseStatus(response, dbQueryStatus.getdbQueryExecResult(), null);
 		return response;
